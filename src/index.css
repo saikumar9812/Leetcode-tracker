@@ -32,6 +32,107 @@ body {
   min-height: 100vh;
 }
 
+/* ==================== LOGIN PAGE ==================== */
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1f2e 100%);
+}
+
+.login-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.login-container h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.login-container>p {
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+.login-container form {
+  text-align: left;
+}
+
+.login-error {
+  background: rgba(255, 55, 95, 0.1);
+  border: 1px solid var(--hard);
+  color: var(--hard);
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.login-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #238636, #2ea043);
+  border: none;
+  color: white;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.login-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 25px rgba(35, 134, 54, 0.4);
+}
+
+.auth-toggle {
+  margin-top: 24px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: var(--easy);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 4px;
+}
+
+.toggle-btn:hover {
+  text-decoration: underline;
+}
+
+.google-btn {
+  background: white !important;
+  color: #3c4043 !important;
+  border: 1px solid #dadce0 !important;
+}
+
+.google-btn:hover {
+  background: #f8f9fa !important;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3) !important;
+  transform: none;
+}
+
 /* ==================== HEADER ==================== */
 .header {
   display: flex;
@@ -898,6 +999,172 @@ body {
   background: var(--text-secondary);
 }
 
+/* ==================== SETTINGS & MODAL ==================== */
+.home-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-btn {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.settings-btn:hover {
+  border-color: var(--accent);
+  background: rgba(35, 134, 54, 0.1);
+}
+
+.sync-status {
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 15px;
+  background: var(--bg-tertiary);
+}
+
+.sync-status.syncing {
+  color: var(--medium);
+}
+
+.sync-status.synced {
+  color: var(--easy);
+}
+
+.sync-status.error {
+  color: var(--hard);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 500px;
+  width: 100%;
+  animation: slideDown 0.2s ease;
+}
+
+.modal-content h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.modal-description {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.modal-description a {
+  color: #58a6ff;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+.form-group input {
+  width: 100%;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.cancel-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #238636, #2ea043);
+  border: none;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.save-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 15px rgba(35, 134, 54, 0.4);
+}
+
+.last-synced {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 16px;
+}
+
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 900px) {
   .home-stats {
@@ -915,6 +1182,11 @@ body {
   .problem-content-col {
     border-right: none;
     border-bottom: 1px solid var(--border);
+  }
+
+  .home-header-row {
+    flex-direction: column;
+    text-align: center;
   }
 }
 

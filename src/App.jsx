@@ -75,12 +75,77 @@ const DSA_CATEGORIES = {
 }
 
 function App() {
+  const AUTH_HASH = "c0c4f90164bc7f8f84c86cda19c39b6fb337d6007418e89f2ac357bb5e2aa800"
+  const ALLOWED_USER = "saikumar98125"
+
+  const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('leetcode-auth') === 'true')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [authError, setAuthError] = useState('')
+
+  // Helper: Generate SHA-256 hash
+  const hashPassword = async (pwd) => {
+    const encoder = new TextEncoder()
+    const data = encoder.encode(pwd)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  }
+
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setAuthError('')
+
+    const cleanUsername = username.trim().toLowerCase()
+    const cleanPassword = password.trim()
+
+    console.log("Checking Login:", { cleanUsername, ALLOWED_USER })
+
+    // 1. Check Username
+    if (cleanUsername !== ALLOWED_USER.toLowerCase()) {
+      setAuthError('Invalid username')
+      console.log('Username mismatch')
+      return
+    }
+
+    // 2. Check Password Hash
+    try {
+      const inputHash = await hashPassword(cleanPassword)
+      console.log("Password Comparison:", { inputHash, expected: AUTH_HASH })
+
+      if (inputHash === AUTH_HASH) {
+        setIsAuthenticated(true)
+        localStorage.setItem('leetcode-auth', 'true')
+        setAuthError('')
+      } else {
+        setAuthError('Invalid password')
+        console.log('Hash mismatch')
+      }
+    } catch (err) {
+      setAuthError('Authentication failed')
+      console.error(err)
+    }
+  }
+
+  const handleLogout = () => {
+    setIsAuthenticated(false)
+    localStorage.removeItem('leetcode-auth')
+  }
+
+  // JSONBin.io Cloud Storage (Restored)
+  const JSONBIN_API_KEY = import.meta.env.VITE_JSONBIN_API_KEY || ''
+  const JSONBIN_BIN_ID = import.meta.env.VITE_JSONBIN_BIN_ID || ''
+  const isCloudConfigured = Boolean(JSONBIN_API_KEY && JSONBIN_BIN_ID)
+
+  const [syncStatus, setSyncStatus] = useState('') // 'syncing', 'synced', 'error'
+
   const [currentView, setCurrentView] = useState('home')
   const [problems, setProblems] = useState([])
   const [companies, setCompanies] = useState([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({})
   const [userData, setUserData] = useState({})
+
 
   // Filters
   const [search, setSearch] = useState('')
@@ -130,14 +195,73 @@ function App() {
       })
       .catch(() => setLoading(false))
 
+    // Load local user data first
     const saved = localStorage.getItem('leetcode-user-data')
     if (saved) setUserData(JSON.parse(saved))
+
+    // Then load from cloud if configured
+    if (isCloudConfigured) {
+      loadFromCloud()
+    }
   }, [])
+
+  // JSONBin: Load data
+  const loadFromCloud = async () => {
+    if (!isCloudConfigured) return
+    try {
+      setSyncStatus('syncing')
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+        headers: { 'X-Access-Key': JSONBIN_API_KEY }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.record) {
+          setUserData(data.record)
+          localStorage.setItem('leetcode-user-data', JSON.stringify(data.record))
+        }
+        setSyncStatus('synced')
+      } else {
+        setSyncStatus('error')
+      }
+    } catch (e) {
+      console.error('Cloud load error:', e)
+      setSyncStatus('error')
+    }
+  }
+
+  // JSONBin: Save data
+  const saveToCloud = async (data) => {
+    if (!isCloudConfigured) return
+    try {
+      setSyncStatus('syncing')
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Access-Key': JSONBIN_API_KEY
+        },
+        body: JSON.stringify(data)
+      })
+      if (res.ok) {
+        setSyncStatus('synced')
+      } else {
+        setSyncStatus('error')
+      }
+    } catch (e) {
+      console.error('Cloud save error:', e)
+      setSyncStatus('error')
+    }
+  }
 
   const saveUserData = (problemId, field, value) => {
     const newData = { ...userData, [problemId]: { ...userData[problemId], [field]: value } }
     setUserData(newData)
     localStorage.setItem('leetcode-user-data', JSON.stringify(newData))
+    // Auto-sync to cloud (debounced)
+    if (isCloudConfigured) {
+      clearTimeout(window.cloudSyncTimeout)
+      window.cloudSyncTimeout = setTimeout(() => saveToCloud(newData), 2000)
+    }
   }
 
   const toggleCategory = (category) => {
@@ -220,13 +344,68 @@ function App() {
 
   if (loading) return <div className="loading"><div className="spinner"></div></div>
 
+  // LOGIN PAGE - Show if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="app login-page">
+        <div className="login-container">
+          <h1>🎯 LeetCode Tracker</h1>
+          <p>Please login to access your tracker</p>
+
+          <form onSubmit={handleLogin}>
+            <div className="form-group">
+              <label>Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter username"
+                autoComplete="username"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                autoComplete="current-password"
+                required
+              />
+            </div>
+
+            {authError && <div className="login-error">{authError}</div>}
+
+            <button type="submit" className="login-btn">Login</button>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
   // HOME PAGE
   if (currentView === 'home') {
     return (
       <div className="app">
         <div className="home-container">
           <div className="home-hero">
-            <h1 className="home-title">🎯 LeetCode Tracker</h1>
+            <div className="home-header-row">
+              <h1 className="home-title">🎯 LeetCode Tracker</h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                {isCloudConfigured && syncStatus && (
+                  <span className={`sync-status ${syncStatus}`}>
+                    {syncStatus === 'syncing' && '🔄 Syncing...'}
+                    {syncStatus === 'synced' && '✅ Synced to Cloud'}
+                    {syncStatus === 'error' && '❌ Sync Error'}
+                  </span>
+                )}
+                <button className="secondary-btn" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={handleLogout}>
+                  Logout
+                </button>
+              </div>
+            </div>
             <p className="home-subtitle">Master DSA with organized practice and tracked progress</p>
           </div>
 
