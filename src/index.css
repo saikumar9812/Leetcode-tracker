@@ -688,11 +688,48 @@ body {
   margin-bottom: 60px;
 }
 
+.categories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
 .home-categories h2 {
   font-size: 24px;
-  margin-bottom: 8px;
+  margin: 0;
   color: var(--text-primary);
   font-weight: 600;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.toggle-btn {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.toggle-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, #238636, #2ea043);
+  border-color: #238636;
+  color: white;
 }
 
 .categories-hint {
@@ -757,8 +794,14 @@ body {
 .problem-list {
   list-style: none;
   padding: 16px 0;
-  max-height: 200px;
-  overflow-y: auto;
+  margin: 0;
+}
+
+.topic-info {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  font-style: italic;
 }
 
 .problem-list li {

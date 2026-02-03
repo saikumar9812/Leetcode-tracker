@@ -91,10 +91,21 @@ function App() {
   const [selectedProgress, setSelectedProgress] = useState('')
   const [showPriorityDropdown, setShowPriorityDropdown] = useState(false)
   const [expandedCategory, setExpandedCategory] = useState(null)
+  const [viewMode, setViewMode] = useState('priority') // 'priority' or 'all'
   const priorityDropdownRef = useRef(null)
 
   const [page, setPage] = useState(1)
   const perPage = 10
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearch('')
+    setSelectedCompany('')
+    setSelectedDifficulty('')
+    setSelectedTopic('')
+    setSelectedCategories([])
+    setSelectedProgress('')
+  }
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -154,6 +165,15 @@ function App() {
     return Array.from(topicSet).sort()
   }, [problems])
 
+  // Get topic counts for home page "All Topics" view
+  const topicCounts = useMemo(() => {
+    const counts = {}
+    problems.forEach(p => p.topics?.forEach(t => {
+      counts[t] = (counts[t] || 0) + 1
+    }))
+    return counts
+  }, [problems])
+
   const filteredProblems = useMemo(() => {
     let result = [...problems]
     if (search) {
@@ -176,7 +196,23 @@ function App() {
   const totalPages = Math.ceil(filteredProblems.length / perPage)
   const paginatedProblems = filteredProblems.slice((page - 1) * perPage, page * perPage)
 
-  useEffect(() => { setPage(1) }, [search, selectedCompany, selectedDifficulty, selectedTopic, selectedCategories, selectedProgress])
+  useEffect(() => {
+    setPage(1)
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0)
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    })
+  }, [search, selectedCompany, selectedDifficulty, selectedTopic, selectedCategories, selectedProgress])
+
+  // Scroll to top when view changes or page changes
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0)
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    })
+  }, [currentView, page])
 
   const solvedCount = Object.values(userData).filter(u => u.progress === 'solved').length
   const attemptedCount = Object.values(userData).filter(u => u.progress === 'attempted').length
@@ -214,35 +250,68 @@ function App() {
           </div>
 
           <div className="home-categories">
-            <h2>📚 Priority Topics</h2>
-            <p className="categories-hint">Click to expand and see problems, or click again to view filtered list</p>
+            <div className="categories-header">
+              <h2>{viewMode === 'priority' ? '📚 Priority Topics' : '🏷️ All Topics'}</h2>
+              <div className="view-toggle">
+                <button className={`toggle-btn ${viewMode === 'priority' ? 'active' : ''}`} onClick={() => { setViewMode('priority'); setExpandedCategory(null) }}>
+                  ⭐ Priority
+                </button>
+                <button className={`toggle-btn ${viewMode === 'all' ? 'active' : ''}`} onClick={() => { setViewMode('all'); setExpandedCategory(null) }}>
+                  📋 All Topics
+                </button>
+              </div>
+            </div>
+            <p className="categories-hint">
+              {viewMode === 'priority'
+                ? 'Click to expand and see curated problems, then view in Problems list'
+                : 'Click a topic to filter problems by that category'}
+            </p>
             <div className="category-grid">
-              {Object.entries(DSA_CATEGORIES).map(([cat, probs]) => (
-                <div key={cat} className={`category-card ${expandedCategory === cat ? 'expanded' : ''}`}>
-                  <div className="category-header" onClick={() => setExpandedCategory(expandedCategory === cat ? null : cat)}>
-                    <div className="category-name">{cat}</div>
-                    <div className="category-count">{probs.length} problems {expandedCategory === cat ? '▲' : '▼'}</div>
-                  </div>
-                  {expandedCategory === cat && (
-                    <div className="category-problems">
-                      <ul className="problem-list">
-                        {probs.map((p, i) => <li key={i}>{p}</li>)}
-                      </ul>
-                      <button className="view-category-btn" onClick={() => { setSelectedCategories([cat]); setCurrentView('problems') }}>
-                        View All in Problems →
-                      </button>
+              {viewMode === 'priority' ? (
+                Object.entries(DSA_CATEGORIES).map(([cat, probs]) => (
+                  <div key={cat} className={`category-card ${expandedCategory === cat ? 'expanded' : ''}`}>
+                    <div className="category-header" onClick={() => setExpandedCategory(expandedCategory === cat ? null : cat)}>
+                      <div className="category-name">{cat}</div>
+                      <div className="category-count">{probs.length} problems {expandedCategory === cat ? '▲' : '▼'}</div>
                     </div>
-                  )}
-                </div>
-              ))}
+                    {expandedCategory === cat && (
+                      <div className="category-problems">
+                        <ul className="problem-list">
+                          {probs.map((p, i) => <li key={i}>{p}</li>)}
+                        </ul>
+                        <button className="view-category-btn" onClick={() => { clearFilters(); setSelectedCategories([cat]); setCurrentView('problems') }}>
+                          View All in Problems →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                allTopics.slice(0, 40).map(topic => (
+                  <div key={topic} className={`category-card ${expandedCategory === topic ? 'expanded' : ''}`}>
+                    <div className="category-header" onClick={() => setExpandedCategory(expandedCategory === topic ? null : topic)}>
+                      <div className="category-name">{topic}</div>
+                      <div className="category-count">{topicCounts[topic]} problems {expandedCategory === topic ? '▲' : '▼'}</div>
+                    </div>
+                    {expandedCategory === topic && (
+                      <div className="category-problems">
+                        <p className="topic-info">Problems tagged with "{topic}"</p>
+                        <button className="view-category-btn" onClick={() => { clearFilters(); setSelectedTopic(topic); setCurrentView('problems') }}>
+                          View {topicCounts[topic]} Problems →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
           <div className="home-actions">
-            <button className="primary-btn" onClick={() => setCurrentView('problems')}>
+            <button className="primary-btn" onClick={() => { clearFilters(); setCurrentView('problems') }}>
               📝 Browse All Problems
             </button>
-            <button className="secondary-btn" onClick={() => { selectAllCategories(); setCurrentView('problems') }}>
+            <button className="secondary-btn" onClick={() => { clearFilters(); selectAllCategories(); setCurrentView('problems') }}>
               ⭐ View All Priority Problems
             </button>
           </div>
@@ -360,6 +429,10 @@ function ProblemRow({ problem, userData, saveUserData, getCategory }) {
   const handleSaveSolution = (value) => {
     setSolution(value)
     saveUserData(problem.id, 'solution', value)
+    // Auto-mark as solved when solution has content
+    if (value && value.trim().length > 0 && userData.progress !== 'solved') {
+      saveUserData(problem.id, 'progress', 'solved')
+    }
   }
 
   const editorHeight = Math.max(350, Math.min(600, problem.content?.length / 10 || 350))
